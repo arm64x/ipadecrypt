@@ -534,7 +534,6 @@ func runDecryptOnBundle(dev *device.Client, helperPath, bundleID, bundlePath, ve
 	// from that stream. --verbose passes -v so the helper additionally
 	// emits LOG_DEBUG events.
 	_, _, code, err := dev.RunHelper(helperPath, bundleID, bundlePath, outRemote, decryptVerbose, onEvent)
-
 	if err != nil {
 		live.Fail("helper run: %v", err)
 		return
@@ -956,6 +955,7 @@ func (p *helperProgress) HandleEvent(ev device.Event) helperUpdate {
 	// Counters + spinner update on each successful dump.
 	case "image.done":
 		p.dumpedTotal.Add(1)
+
 		switch ev.Attr("kind") {
 		case "main":
 			p.dumpedMain.Add(1)
@@ -964,6 +964,7 @@ func (p *helperProgress) HandleEvent(ev device.Event) helperUpdate {
 		default:
 			p.dumpedOther.Add(1)
 		}
+
 		upd.spin = fmt.Sprintf("decrypted %d image(s)", p.dumpedTotal.Load())
 
 	// Suppress empty-result bundle.done so the TUI stays quiet on appex
@@ -997,8 +998,10 @@ func (p *helperProgress) HandleEvent(ev device.Event) helperUpdate {
 			if k == "event" || k == "level" {
 				continue
 			}
+
 			parts = append(parts, fmt.Sprintf("%s=%q", k, v))
 		}
+
 		upd.note = strings.Join(parts, " ")
 	}
 

@@ -308,6 +308,7 @@ func (c *Client) bundleIdentifierAt(infoPlistPath string) (string, error) {
 	}
 
 	id, _ := info["CFBundleIdentifier"].(string)
+
 	return id, nil
 }
 
@@ -344,8 +345,10 @@ func (c *Client) RunHelper(helperPath, bundleID, bundlePath, outIPA string,
 	if verbose {
 		flag = "-v "
 	}
+
 	cmd := fmt.Sprintf("%s %sdecrypt %q %q %q",
 		helperPath, flag, bundleID, bundlePath, outIPA)
+
 	splitter := newEventSplitter(onEvent, io.Discard)
 	defer splitter.Close()
 
