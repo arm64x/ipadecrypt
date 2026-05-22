@@ -203,6 +203,7 @@ func rewriteIPA(src, dst string, edit func(map[string]any, int) ([]byte, error),
 	}
 
 	committed := false
+
 	defer func() {
 		if !committed {
 			out.Close()
