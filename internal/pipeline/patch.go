@@ -257,20 +257,6 @@ func isAppExtPath(name string) bool {
 		parts[2] == "PlugIns"
 }
 
-func intSliceEqual(a, b []int) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
-}
-
 func readDeviceFamily(v any) []int {
 	arr, ok := v.([]any)
 	if !ok {
@@ -486,52 +472,4 @@ func cmpVer(a, b string) int {
 	}
 
 	return 0
-}
-
-// RestoreOriginalPlistValues rewrites the main Info.plist of an already-built
-// IPA, putting MinimumOSVersion and UIDeviceFamily back to the values
-// captured before PatchForInstall mutated them. The rewrite is atomic
-// (write-to-tmp + rename) and is a no-op when the IPA already matches the
-// originals, so the multi-GB copy is skipped in the common "nothing to do"
-// case.
-func RestoreOriginalPlistValues(ipaPath, originalMinOS string, originalDeviceFamily []int) error {
-	if originalMinOS == "" && len(originalDeviceFamily) == 0 {
-		return nil
-	}
-
-	tmpPath := ipaPath + ".tmp"
-
-	wrote, _, err := rewriteIPA(ipaPath, tmpPath, func(m map[string]any, format int) ([]byte, error) {
-		dirty := false
-
-		if originalMinOS != "" {
-			if cur, _ := m["MinimumOSVersion"].(string); cur != originalMinOS {
-				m["MinimumOSVersion"] = originalMinOS
-				dirty = true
-			}
-		}
-
-		if len(originalDeviceFamily) > 0 {
-			cur := readDeviceFamily(m["UIDeviceFamily"])
-			if !intSliceEqual(cur, originalDeviceFamily) {
-				m["UIDeviceFamily"] = toAnySlice(originalDeviceFamily)
-				dirty = true
-			}
-		}
-
-		if !dirty {
-			return nil, nil
-		}
-
-		return plist.Marshal(m, format)
-	}, false)
-	if err != nil {
-		return err
-	}
-
-	if !wrote {
-		return nil
-	}
-
-	return os.Rename(tmpPath, ipaPath)
 }

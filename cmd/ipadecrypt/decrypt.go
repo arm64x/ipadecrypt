@@ -345,7 +345,7 @@ func decryptHandler(cmd *cobra.Command, args []string) {
 				uninstallBundleID = target.bundleId
 				uninstallBundlePath = installedPath
 
-				runDecryptOnBundle(dev, cleanups, helperPath, target.bundleId, installedPath, version, "", "", nil)
+				runDecryptOnBundle(dev, cleanups, helperPath, target.bundleId, installedPath, version, "")
 
 				return
 			}
@@ -559,7 +559,7 @@ func decryptHandler(cmd *cobra.Command, args []string) {
 	uninstallBundleID = appBundleID
 	uninstallBundlePath = install.bundlePath
 
-	runDecryptOnBundle(dev, cleanups, plan.helperPath, appBundleID, install.bundlePath, appVersion, encPath, patch.previousMinOS, patch.previousDeviceFamily)
+	runDecryptOnBundle(dev, cleanups, plan.helperPath, appBundleID, install.bundlePath, appVersion, encPath)
 }
 
 // decideUninstall picks the post-decrypt cleanup behavior. weInstalledIt
@@ -624,13 +624,7 @@ func verifyFailureSummary(res pipeline.VerifyResult) string {
 // srcIPAPath is the source IPA on the host when one exists (App Store
 // download / cache hit / local --ipa); empty for the use-installed path
 // where the source lives on-device only. Used by --extra-verify.
-//
-// originalMinOS / originalDeviceFamily are the pre-PatchForInstall values
-// from the source IPA; when non-empty the output IPA's Info.plist is
-// rewritten back to them after the pull, so the decrypted artifact does
-// not ship with our install-time mutations baked in. Both are empty on
-// the --use-installed path (no patching happened).
-func runDecryptOnBundle(dev *device.Client, cleanups *cleanupStack, helperPath, bundleID, bundlePath, version, srcIPAPath, originalMinOS string, originalDeviceFamily []int) {
+func runDecryptOnBundle(dev *device.Client, cleanups *cleanupStack, helperPath, bundleID, bundlePath, version, srcIPAPath string) {
 	outLocal, err := localOutputPath(decryptOutput, bundleID, version)
 	if err != nil {
 		tui.Err("output path: %v", err)
@@ -776,19 +770,6 @@ func runDecryptOnBundle(dev *device.Client, cleanups *cleanupStack, helperPath, 
 		}
 
 		live.OK("%s", verifyOKSummary(res, compareSource))
-	}
-
-	// Restore is only needed for the on-device-zip path: helper packaged
-	// the patched installed bundle, so the output Info.plist still carries
-	// our install-time mutations. The host-assembly path uses the source
-	// IPA's Info.plist verbatim, so no restoration runs.
-	if srcIPAPath == "" && (originalMinOS != "" || len(originalDeviceFamily) > 0) {
-		if err := pipeline.RestoreOriginalPlistValues(outLocal, originalMinOS, originalDeviceFamily); err != nil {
-			tui.Err("restore Info.plist: %v", err)
-			return
-		}
-
-		tui.OK("restored Info.plist (MinimumOSVersion, UIDeviceFamily)")
 	}
 
 	abandonLocal = false
