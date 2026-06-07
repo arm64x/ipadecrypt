@@ -383,7 +383,11 @@ func decryptHandler(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		acc := cfg.Apple.Account()
+		acc, err := accountWithStorefront(cfg, decryptStorefront)
+		if err != nil {
+			tui.Err("storefront: %v", err)
+			return
+		}
 
 		appStoreCountry, err := appstore.CountryCodeFromStoreFront(acc.StoreFront)
 		if err != nil {

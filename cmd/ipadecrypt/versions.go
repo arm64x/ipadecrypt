@@ -86,7 +86,13 @@ func versionsHandler(cmd *cobra.Command, args []string) {
 		live.Spin("resolving bundleId %s", target.bundleId)
 	}
 
-	app, err := lookupVersionsTargetApp(as, cfg.Apple.Account(), target)
+	acc, err := accountWithStorefront(cfg, versionsStorefront)
+	if err != nil {
+		tui.Err("storefront: %v", err)
+		return
+	}
+
+	app, err := lookupVersionsTargetApp(as, acc, target)
 	if err != nil {
 		live.Fail("lookup failed: %v", err)
 		return

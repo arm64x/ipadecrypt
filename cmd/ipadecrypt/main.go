@@ -19,6 +19,7 @@ var (
 
 	decryptExtVerID       string
 	decryptOutput         string
+	decryptStorefront     string
 	decryptNoCleanup      bool
 	decryptNoVerify       bool
 	decryptExtraVerify    bool
@@ -30,6 +31,7 @@ var (
 	decryptNoUninstall    bool
 	decryptVerbose        bool
 
+	versionsStorefront   string
 	versionsLogResponses bool
 )
 
@@ -60,6 +62,7 @@ func main() {
 		Run:   decryptHandler,
 	}
 	decrypt.Flags().StringVar(&decryptExtVerID, "external-version-id", "", "pin to a specific historical App Store version")
+	decrypt.Flags().StringVar(&decryptStorefront, "storefront", "", "override App Store storefront (numeric ID or two-letter country code, e.g. 143441 or US)")
 	decrypt.Flags().StringVarP(&decryptOutput, "output", "o", "", "output path for the decrypted IPA (default: ./<bundleID>_<version>.decrypted.ipa)")
 	decrypt.Flags().BoolVar(&decryptNoCleanup, "no-cleanup", false, "leave remote staging files in place")
 	decrypt.Flags().BoolVar(&decryptNoVerify, "no-verify", false, "skip the post-decrypt Mach-O verification pass")
@@ -79,6 +82,7 @@ func main() {
 		Args:  cobra.ExactArgs(1),
 		Run:   versionsHandler,
 	}
+	versions.Flags().StringVar(&versionsStorefront, "storefront", "", "override App Store storefront (numeric ID or two-letter country code, e.g. 143441 or US)")
 	versions.Flags().BoolVar(&versionsLogResponses, "log-responses", false, "append each API response as a JSONL record to ~/.ipadecrypt/logs/versions.log")
 
 	root.AddCommand(bootstrap, decrypt, versions)
